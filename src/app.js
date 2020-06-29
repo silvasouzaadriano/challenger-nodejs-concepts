@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 
-const { uuid } = require("uuidv4");
+const { uuid, isUuid } = require("uuidv4");
 
 const app = express();
 
@@ -24,7 +24,7 @@ app.post("/repositories", (request, response) => {
     title,
     url,
     techs,
-    likes
+    likes: 0
    };
 
   repositories.push(repository);
@@ -35,19 +35,24 @@ app.post("/repositories", (request, response) => {
 // Update the the title, url and techs of a repository
 app.put("/repositories/:id", (request, response) => {
   const { id }  = request.params;
-  const { title, url, techs } = request.body;
+  const { title, url, techs, likes } = request.body;
+
+  // The update cannot changes likes manually
+  if (likes) {
+    return response.status(400).json({ likes: 0 });
+  }
 
   const repositoryIndex = repositories.findIndex(repository => repository.id === id);
 
   if (repositoryIndex < 0) {
-    return response.status(404).json({ error: 'Repository not found.'});
+    return response.status(400).json({ error: 'Repository not found.'});
   }
 
   const repository = {
     id,
+    title,
     url,
-    techs,
-    likes: repositories[repositoryIndex].likes
+    techs
   };
 
   repositories[repositoryIndex] = repository;
@@ -62,7 +67,7 @@ app.delete("/repositories/:id", (request, response) => {
   const repositoryIndex = repositories.findIndex(repository => repository.id === id);
 
   if (repositoryIndex < 0) {
-    return response.status(404).json({ error: 'Repository not found.'});
+    return response.status(400).json({ error: 'Repository not found.'});
   }
 
   repositories.splice(repositoryIndex, 1);
@@ -73,12 +78,11 @@ app.delete("/repositories/:id", (request, response) => {
 
 // Increase the number of likes for a specific repository
 app.post("/repositories/:id/like", (request, response) => {
-  console.log('entrei');
   const { id }  = request.params;
   const repositoryIndex = repositories.findIndex(repository => repository.id === id);
 
   if (repositoryIndex < 0) {
-    return response.status(404).json({ error: 'Repository not found.'});
+    return response.status(400).json({ error: 'Repository not found.'});
   }
 
   repositories[repositoryIndex].likes += 1;
