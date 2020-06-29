@@ -70,8 +70,20 @@ app.delete("/repositories/:id", (request, response) => {
   return response.status(204).json();
 });
 
+
+// Increase the number of likes for a specific repository
 app.post("/repositories/:id/like", (request, response) => {
-  // TODO
+  console.log('entrei');
+  const { id }  = request.params;
+  const repositoryIndex = repositories.findIndex(repository => repository.id === id);
+
+  if (repositoryIndex < 0) {
+    return response.status(404).json({ error: 'Repository not found.'});
+  }
+
+  repositories[repositoryIndex].likes += 1;
+
+  return response.json(repositories[repositoryIndex]);
 });
 
 module.exports = app;
